@@ -1,0 +1,17 @@
+{
+    "name": "bprollinson/bolognese-router-lib",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/bprollinson/bolognese-router-api"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/bprollinson/bolognese-controller-api"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "bprollinson/bolognese-router-api": "dev-master"
+    }
+}
