@@ -6,10 +6,12 @@ require_once('vendor/bprollinson/bolognese-controller-api/src/MethodInvocation.c
 class Router
 {
     private $routesFile;
+    private $URIMatcher;
 
     public function __construct(string $routesFile)
     {
         $this->routesFile = $routesFile;
+        $this->URIMatcher = new URIMatcher();
     }
 
     public function route(Request $request)
@@ -25,7 +27,7 @@ class Router
             }
 
             $parameterValues = [];
-            if (!$this->URIsMatch($request->getURI(), $possibleRoute['request'], $parameterValues))
+            if (!$this->URIMatcher->URIMatchesSpec($request->getURI(), $possibleRoute['request'], $parameterValues))
             {
                 continue;
             }
@@ -45,8 +47,11 @@ class Router
 
         return null;
     }
+}
 
-    private function URIsMatch($uri, $requestSpecification, &$parameterValues)
+class URIMatcher
+{
+    public function URIMatchesSpec($uri, $requestSpecification, &$parameterValues)
     {
         $variableMatches = [];
         preg_match_all("#{.*?}#", $requestSpecification['uri'], $variableMatches);
