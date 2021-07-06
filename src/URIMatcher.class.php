@@ -1,3 +1,5 @@
+<?php
+
 class URIMatcher
 {
     public function URIMatchesSpec($uri, $requestSpecification, &$parameterValues)
