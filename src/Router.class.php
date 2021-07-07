@@ -6,21 +6,18 @@ require_once('vendor/bprollinson/bolognese-controller-api/src/MethodInvocation.c
 
 class Router
 {
-    private $routesFile;
+    private $routesArray;
     private $URIMatcher;
 
-    public function __construct(string $routesFile)
+    public function __construct(array $routesArray, URIMatcher $URIMatcher)
     {
-        $this->routesFile = $routesFile;
-        $this->URIMatcher = new URIMatcher();
+        $this->routesArray = $routesArray;
+        $this->URIMatcher = $URIMatcher;
     }
 
     public function route(Request $request)
     {
-        $routesFileContents = file_get_contents($this->routesFile);
-        $routesArray = json_decode($routesFileContents, true);
-
-        foreach ($routesArray as $possibleRoute)
+        foreach ($this->routesArray as $possibleRoute)
         {
             if ($request->getMethod() != $possibleRoute['request']['method'])
             {
