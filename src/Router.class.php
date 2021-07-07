@@ -25,7 +25,8 @@ class Router
             }
 
             $parameterValues = [];
-            if (!$this->URIMatcher->URIMatchesSpec($request->getURI(), $possibleRoute['request'], $parameterValues))
+            $URIMatchResult = $this->URIMatcher->matchAgainstSpec($request->getURI(), $possibleRoute['request']);
+            if (!$URIMatchResult->matches()))
             {
                 continue;
             }
@@ -37,7 +38,7 @@ class Router
                 $methodInvocation['namespace'],
                 $methodInvocation['class'],
                 $methodInvocation['method'],
-                $parameterValues,
+                $URIMatchResult->getParameterValues(),
                 $request->getGet(),
                 $request->getPost()
             );

@@ -1,8 +1,10 @@
 <?php
 
+require_once(dirname(__FILE__) . '/URIMatchResult.class.php');
+
 class URIMatcher
 {
-    public function URIMatchesSpec($uri, $requestSpecification, &$parameterValues)
+    public function matchAgainstSpec(string $uri, array $requestSpecification)
     {
         $variableMatches = [];
         preg_match_all("#{.*?}#", $requestSpecification['uri'], $variableMatches);
@@ -15,7 +17,7 @@ class URIMatcher
             $variableRegularExpression = $this->buildVariableRegularExpression($variableName, $requestSpecification['params']);
             if ($variableRegularExpression === null)
             {
-                return false;
+                return new URIMatchResult(false);
             }
 
             $URISpecification = str_replace($variableMatch, "($variableRegularExpression)", $URISpecification);
@@ -24,13 +26,14 @@ class URIMatcher
         $matches = [];
         $result = preg_match($URISpecification, $uri, $matches) === 1;
 
+        $parameterValues = [];
         if ($result)
         {
             array_shift($matches);
             $parameterValues = array_combine($variableNames, $matches);
         }
 
-        return $result;
+        return new URIMatchResult($result, $parameterValues);
     }
 
     private function buildVariableRegularExpression($variableName, $params)
