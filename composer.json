@@ -13,5 +13,8 @@
     "minimum-stability": "dev",
     "require": {
         "bprollinson/bolognese-router-api": "dev-master"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0.0"
     }
 }

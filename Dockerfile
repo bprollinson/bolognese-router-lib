@@ -1,6 +1,6 @@
 FROM alpine:3.14.0
 
-RUN apk add php7 curl php7-json php7-phar php7-mbstring php7-openssl
+RUN apk add php7 curl php7-json php7-phar php7-mbstring php7-openssl php7-dom php7-xml php7-xmlwriter php7-tokenizer
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
 
