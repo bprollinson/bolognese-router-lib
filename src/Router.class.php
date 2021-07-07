@@ -26,7 +26,7 @@ class Router
 
             $parameterValues = [];
             $URIMatchResult = $this->URIMatcher->matchAgainstSpec($request->getURI(), $possibleRoute['request']);
-            if (!$URIMatchResult->matches()))
+            if (!$URIMatchResult->matches())
             {
                 continue;
             }

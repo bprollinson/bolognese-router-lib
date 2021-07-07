@@ -8,7 +8,7 @@ class URIMatchResult
     public function __construct(bool $matches, array $parameterValues = [])
     {
         $this->matches = $matches;
-        $this->parameterValues = [];
+        $this->parameterValues = $parameterValues;
     }
 
     public function matches()
