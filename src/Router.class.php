@@ -19,30 +19,44 @@ class Router
     {
         foreach ($this->routesArray as $possibleRoute)
         {
-            if ($request->getMethod() != $possibleRoute['request']['method'])
+            $methodInvocation = $this->routeForPossibleRoute($request, $possibleRoute);
+            if ($methodInvocation !== null)
             {
-                continue;
+                return $methodInvocation;
             }
-
-            $URIMatchResult = $this->URIMatcher->matchAgainstSpec($request->getURI(), $possibleRoute['request']);
-            if (!$URIMatchResult->matches())
-            {
-                continue;
-            }
-
-            $methodInvocation = $possibleRoute['methodInvocation'];
-
-            return new MethodInvocation(
-                $methodInvocation['hostname'],
-                $methodInvocation['namespace'],
-                $methodInvocation['class'],
-                $methodInvocation['method'],
-                $URIMatchResult->getParameterValues(),
-                $request->getGet(),
-                $request->getPost()
-            );
         }
 
         return null;
+    }
+
+    private function routeForPossibleRoute(Request $request, array $possibleRoute): ?MethodInvocation
+    {
+        $URIMatchResult = $this->matchPossibleRoute($request, $possibleRoute);
+        if (!$URIMatchResult->matches())
+        {
+            return null;
+        }
+
+        $methodInvocation = $possibleRoute['methodInvocation'];
+
+        return new MethodInvocation(
+            $methodInvocation['hostname'],
+            $methodInvocation['namespace'],
+            $methodInvocation['class'],
+            $methodInvocation['method'],
+            $URIMatchResult->getParameterValues(),
+            $request->getGet(),
+            $request->getPost()
+        );
+    }
+
+    private function matchPossibleRoute(Request $request, array $possibleRoute): ?URIMatchResult
+    {
+        if ($request->getMethod() != $possibleRoute['request']['method'])
+        {
+            return new URIMatchResult(false);
+        }
+
+        return $this->URIMatcher->matchAgainstSpec($request->getURI(), $possibleRoute['request']);
     }
 }
