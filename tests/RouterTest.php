@@ -63,6 +63,113 @@ class RouterTest extends TestCase
     /**                                                                         
      * @test                                                                    
      */                                                                         
+    public function routerReturnsFirstMethodInvocationWhenMultipleRoutesMatch()
+    {
+        $routesArray = [
+            [
+                'request' => [
+                    'method' => 'GET',
+                    'uri' => '/path'
+                ],
+                'methodInvocation' => [
+                    'hostname' => 'controller1',
+                    'namespace' => null,
+                    'class' => 'MyController1',
+                    'method' => 'myMethod1'
+                ]
+            ],
+            [
+                'request' => [
+                    'method' => 'GET',
+                    'uri' => '/path'
+                ],
+                'methodInvocation' => [
+                    'hostname' => 'controller2',
+                    'namespace' => null,
+                    'class' => 'MyController2',
+                    'method' => 'myMethod2'
+                ]
+            ]
+        ];
+        $URIMatcher = $this->createMock(URIMatcher::class);
+        $URIMatcher->expects($this->once())
+            ->method('matchAgainstSpec')
+            ->with(
+                '/path',
+                [
+                    'method' => 'GET',
+                    'uri' => '/path'
+                ]
+            )
+            ->willReturn(new URIMatchResult(true));
+        $router = new Router($routesArray, $URIMatcher);
+ 
+        $expectedMethodInvocation = new MethodInvocation('controller1', null, 'MyController1', 'myMethod1', [], [], []);
+        $methodInvocation = $router->route(new Request('GET', '/path', [], []));
+        $this->assertEquals($expectedMethodInvocation, $methodInvocation);
+    }
+
+    /**                                                                         
+     * @test                                                                    
+     */                                                                         
+    public function routerReturnsSubsequentMethodInvocationWhenFirstRouteDoesntMatch()
+    {
+        $routesArray = [
+            [
+                'request' => [
+                    'method' => 'GET',
+                    'uri' => '/otherpath'
+                ],
+                'methodInvocation' => [
+                    'hostname' => 'controller1',
+                    'namespace' => null,
+                    'class' => 'MyController1',
+                    'method' => 'myMethod1'
+                ]
+            ],
+            [
+                'request' => [
+                    'method' => 'GET',
+                    'uri' => '/path'
+                ],
+                'methodInvocation' => [
+                    'hostname' => 'controller2',
+                    'namespace' => null,
+                    'class' => 'MyController2',
+                    'method' => 'myMethod2'
+                ]
+            ]
+        ];
+        $URIMatcher = $this->createMock(URIMatcher::class);
+        $URIMatcher->expects($this->exactly(2))
+            ->method('matchAgainstSpec')
+            ->withConsecutive([
+                '/path',
+                [
+                    'method' => 'GET',
+                    'uri' => '/otherpath'
+                ]
+            ], [
+                '/path',
+                [
+                    'method' => 'GET',
+                    'uri' => '/path'
+                ]
+            ])
+            ->willReturnOnConsecutiveCalls(
+                new URIMatchResult(false),
+                new URIMatchResult(true)
+            );
+        $router = new Router($routesArray, $URIMatcher);
+ 
+        $expectedMethodInvocation = new MethodInvocation('controller2', null, 'MyController2', 'myMethod2', [], [], []);
+        $methodInvocation = $router->route(new Request('GET', '/path', [], []));
+        $this->assertEquals($expectedMethodInvocation, $methodInvocation);
+    }
+
+    /**                                                                         
+     * @test                                                                    
+     */                                                                         
     public function routerReturnsMethodInvocationWithGetAndPostParamsWhenRouteMatches()
     {
         $routesArray = [
@@ -102,6 +209,47 @@ class RouterTest extends TestCase
         ];
         $expectedMethodInvocation = new MethodInvocation('controller', null, 'MyController', 'myMethod', [], $getParams, $postParams);
         $methodInvocation = $router->route(new Request('GET', '/path', $getParams, $postParams));
+        $this->assertEquals($expectedMethodInvocation, $methodInvocation);
+    }
+
+    /**                                                                         
+     * @test                                                                    
+     */                                                                         
+    public function routerReturnsMethodInvocationWithURLParamsWhenRouteMatches()
+    {
+        $routesArray = [
+            [
+                'request' => [
+                    'method' => 'GET',
+                    'uri' => '/path/{url_key1}/{url_key2}'
+                ],
+                'methodInvocation' => [
+                    'hostname' => 'controller',
+                    'namespace' => null,
+                    'class' => 'MyController',
+                    'method' => 'myMethod'
+                ]
+            ]
+        ];
+        $URIMatcher = $this->createMock(URIMatcher::class);
+        $urlParams = [
+            'url_key1' => 'url_value1',
+            'url_key2' => 'url_value2'
+        ];
+        $URIMatcher->expects($this->once())
+            ->method('matchAgainstSpec')
+            ->with(
+                '/path/url_value1/url_value2',
+                [
+                    'method' => 'GET',
+                    'uri' => '/path/{url_key1}/{url_key2}'
+                ]
+            )
+            ->willReturn(new URIMatchResult(true, $urlParams));
+        $router = new Router($routesArray, $URIMatcher); 
+
+        $expectedMethodInvocation = new MethodInvocation('controller', null, 'MyController', 'myMethod', $urlParams, [], []);
+        $methodInvocation = $router->route(new Request('GET', '/path/url_value1/url_value2', [], []));
         $this->assertEquals($expectedMethodInvocation, $methodInvocation);
     }
 
