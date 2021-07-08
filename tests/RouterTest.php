@@ -10,14 +10,22 @@ use PHPUnit\Framework\TestCase;
 
 class RouterTest extends TestCase
 {
+    private $URIMatcher;
+
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        $this->URIMatcher = $this->createMock(URIMatcher::class);
+    }
+
     /**
      * @test
      */
     public function routeReturnsNullWhenNoRoutesDeined()
     {
         $routesArray = [];
-        $URIMatcher = $this->createMock(URIMatcher::class);
-        $router = new Router($routesArray, $URIMatcher);
+        $router = new Router($routesArray, $this->URIMatcher);
 
         $methodInvocation = $router->route(new Request('GET', '/path', [], []));
         $this->assertNull($methodInvocation);
@@ -42,8 +50,7 @@ class RouterTest extends TestCase
                 ]
             ]
         ];
-        $URIMatcher = $this->createMock(URIMatcher::class);
-        $URIMatcher->expects($this->once())
+        $this->URIMatcher->expects($this->once())
             ->method('matchAgainstSpec')
             ->with(
                 '/path',
@@ -53,7 +60,7 @@ class RouterTest extends TestCase
                 ]
             )
             ->willReturn(new URIMatchResult(true));
-        $router = new Router($routesArray, $URIMatcher);
+        $router = new Router($routesArray, $this->URIMatcher);
  
         $expectedMethodInvocation = new MethodInvocation('controller', null, 'MyController', 'myMethod', [], [], []);
         $methodInvocation = $router->route(new Request('GET', '/path', [], []));
@@ -91,8 +98,7 @@ class RouterTest extends TestCase
                 ]
             ]
         ];
-        $URIMatcher = $this->createMock(URIMatcher::class);
-        $URIMatcher->expects($this->once())
+        $this->URIMatcher->expects($this->once())
             ->method('matchAgainstSpec')
             ->with(
                 '/path',
@@ -102,7 +108,7 @@ class RouterTest extends TestCase
                 ]
             )
             ->willReturn(new URIMatchResult(true));
-        $router = new Router($routesArray, $URIMatcher);
+        $router = new Router($routesArray, $this->URIMatcher);
  
         $expectedMethodInvocation = new MethodInvocation('controller1', null, 'MyController1', 'myMethod1', [], [], []);
         $methodInvocation = $router->route(new Request('GET', '/path', [], []));
@@ -140,8 +146,7 @@ class RouterTest extends TestCase
                 ]
             ]
         ];
-        $URIMatcher = $this->createMock(URIMatcher::class);
-        $URIMatcher->expects($this->exactly(2))
+        $this->URIMatcher->expects($this->exactly(2))
             ->method('matchAgainstSpec')
             ->withConsecutive([
                 '/path',
@@ -160,7 +165,7 @@ class RouterTest extends TestCase
                 new URIMatchResult(false),
                 new URIMatchResult(true)
             );
-        $router = new Router($routesArray, $URIMatcher);
+        $router = new Router($routesArray, $this->URIMatcher);
  
         $expectedMethodInvocation = new MethodInvocation('controller2', null, 'MyController2', 'myMethod2', [], [], []);
         $methodInvocation = $router->route(new Request('GET', '/path', [], []));
@@ -186,8 +191,7 @@ class RouterTest extends TestCase
                 ]
             ]
         ];
-        $URIMatcher = $this->createMock(URIMatcher::class);
-        $URIMatcher->expects($this->once())
+        $this->URIMatcher->expects($this->once())
             ->method('matchAgainstSpec')
             ->with(
                 '/path',
@@ -197,7 +201,7 @@ class RouterTest extends TestCase
                 ]
             )
             ->willReturn(new URIMatchResult(true));
-        $router = new Router($routesArray, $URIMatcher);
+        $router = new Router($routesArray, $this->URIMatcher);
  
         $getParams = [
             'get_key1' => 'get_value1',
@@ -231,12 +235,11 @@ class RouterTest extends TestCase
                 ]
             ]
         ];
-        $URIMatcher = $this->createMock(URIMatcher::class);
         $urlParams = [
             'url_key1' => 'url_value1',
             'url_key2' => 'url_value2'
         ];
-        $URIMatcher->expects($this->once())
+        $this->URIMatcher->expects($this->once())
             ->method('matchAgainstSpec')
             ->with(
                 '/path/url_value1/url_value2',
@@ -246,7 +249,7 @@ class RouterTest extends TestCase
                 ]
             )
             ->willReturn(new URIMatchResult(true, $urlParams));
-        $router = new Router($routesArray, $URIMatcher); 
+        $router = new Router($routesArray, $this->URIMatcher); 
 
         $expectedMethodInvocation = new MethodInvocation('controller', null, 'MyController', 'myMethod', $urlParams, [], []);
         $methodInvocation = $router->route(new Request('GET', '/path/url_value1/url_value2', [], []));
@@ -266,8 +269,7 @@ class RouterTest extends TestCase
                 ]
             ]
         ];
-        $URIMatcher = $this->createMock(URIMatcher::class);
-        $router = new Router($routesArray, $URIMatcher);
+        $router = new Router($routesArray, $this->URIMatcher);
 
         $methodInvocation = $router->route(new Request('POT', '/path', [], []));
         $this->assertNull($methodInvocation);
@@ -287,8 +289,7 @@ class RouterTest extends TestCase
                 ]
             ]
         ];
-        $URIMatcher = $this->createMock(URIMatcher::class);
-        $URIMatcher->expects($this->once())
+        $this->URIMatcher->expects($this->once())
             ->method('matchAgainstSpec')
             ->with(
                 '/otherpath',
@@ -298,7 +299,7 @@ class RouterTest extends TestCase
                 ]
             )
             ->willReturn(new URIMatchResult(false)); 
-        $router = new Router($routesArray, $URIMatcher);
+        $router = new Router($routesArray, $this->URIMatcher);
 
         $methodInvocation = $router->route(new Request('GET', '/otherpath', [], []));
         $this->assertNull($methodInvocation);
