@@ -4,39 +4,36 @@ require_once(dirname(__FILE__) . '/URIMatchResult.class.php');
 
 class URIMatcher
 {
-    public function matchAgainstSpec(string $uri, array $requestSpecification)
+    public function matchAgainstSpec(string $uri, array $requestSpecification): URIMatchResult
     {
-        $variableMatches = [];
-        preg_match_all("#{.*?}#", $requestSpecification['uri'], $variableMatches);
+        $variableNames = $this->extractVariableNamesFromURISpec($requestSpecification['uri']);
+
         $URISpecification = "#^{$requestSpecification['uri']}$#";
-        $variableNames = [];
-        foreach ($variableMatches[0] as $variableMatch)
+        foreach ($variableNames as $variableName)
         {
-            $variableName = substr($variableMatch, 1, -1);
-            $variableNames[] = $variableName;
             $variableRegularExpression = $this->buildVariableRegularExpression($variableName, $requestSpecification['params']);
             if ($variableRegularExpression === null)
             {
                 return new URIMatchResult(false);
             }
 
-            $URISpecification = str_replace($variableMatch, "($variableRegularExpression)", $URISpecification);
+            $URISpecification = str_replace('{' . $variableName . '}', "($variableRegularExpression)", $URISpecification);
         }
 
-        $matches = [];
-        $result = preg_match($URISpecification, $uri, $matches) === 1;
-
-        $parameterValues = [];
-        if ($result)
-        {
-            array_shift($matches);
-            $parameterValues = array_combine($variableNames, $matches);
-        }
-
-        return new URIMatchResult($result, $parameterValues);
+        return $this->buildMatchResult($URISpecification, $uri, $variableNames);
     }
 
-    private function buildVariableRegularExpression($variableName, $params)
+    private function extractVariableNamesFromURISpec(string $URISpec): array
+    {
+        $variableMatches = [];
+        preg_match_all("#{.*?}#", $URISpec, $variableMatches);
+
+        return array_map(function ($variableMatch) {
+            return substr($variableMatch, 1, -1);
+        }, $variableMatches[0]);
+    }
+
+    private function buildVariableRegularExpression(string $variableName, array $params): ?string
     {
         $matchingParams = array_filter($params, function($param) use ($variableName) {
             return $param['name'] == $variableName;
@@ -58,5 +55,20 @@ class URIMatcher
             default:
                 return null;
         }
+    }
+
+    private function buildMatchResult(string $URISpecification, string $uri, array $variableNames): URIMatchResult
+    {
+        $matches = [];
+        $result = preg_match($URISpecification, $uri, $matches) === 1;
+
+        $parameterValues = [];
+        if ($result)
+        {
+            array_shift($matches);
+            $parameterValues = array_combine($variableNames, $matches);
+        }
+
+        return new URIMatchResult($result, $parameterValues);
     }
 }
