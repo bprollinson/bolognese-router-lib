@@ -10,7 +10,7 @@ class URIMatcherTest extends TestCase
     /**
      * @test
      */
-    public function matchAgainstSpecReturnsTrue()
+    public function matchAgainstSpecReturnsPositiveResult()
     {
         $URIMatcher = new URIMatcher();
         $spec = [
@@ -25,7 +25,7 @@ class URIMatcherTest extends TestCase
     /**
      * @test
      */
-    public function matchAgainstSpecReturnsFalse()
+    public function matchAgainstSpecReturnsNegativeResult()
     {
         $URIMatcher = new URIMatcher();
         $spec = [
@@ -40,7 +40,7 @@ class URIMatcherTest extends TestCase
     /**
      * @test
      */
-    public function matchAgainstSpecReturnsTrueForSpecWithNaturalNumberParameter()
+    public function matchAgainstSpecReturnsPositiveResultForSpecWithNaturalNumberParameter()
     {
         $URIMatcher = new URIMatcher();
         $spec = [
@@ -64,7 +64,7 @@ class URIMatcherTest extends TestCase
     /**
      * @test
      */
-    public function matchAgainstSpecReturnsTrueForSpecWithAlphabeticParameter()
+    public function matchAgainstSpecReturnsPositiveResultForSpecWithAlphabeticParameter()
     {
         $URIMatcher = new URIMatcher();
         $spec = [
@@ -82,6 +82,46 @@ class URIMatcherTest extends TestCase
         ];
         $expectedURIMatchResult = new URIMatchResult(true, $parameterValues);
         $URIMatchResult = $URIMatcher->matchAgainstSpec('/path/value', $spec);
+        $this->assertEquals($expectedURIMatchResult, $URIMatchResult);
+    }
+
+    /**
+     * @test
+     */
+    public function matchAgainstSpecReturnsNegativeResultForUnknownParameterType()
+    {
+        $URIMatcher = new URIMatcher();
+        $spec = [
+            'uri' => '/path/{param}',
+            'params' => [
+                [
+                    'name' => 'param',
+                    'type' => 'unknowntype'
+                ]
+            ]
+        ];
+
+        $expectedURIMatchResult = new URIMatchResult(false);
+        $URIMatchResult = $URIMatcher->matchAgainstSpec('/path/value', $spec);
+        $this->assertEquals($expectedURIMatchResult, $URIMatchResult);
+    }
+
+    /**
+     * @test
+     */
+    public function matchAgainstSpecReturnsNegativeResultWhenParameterIsMissingDeclaration()
+    {
+        $URIMatcher = new URIMatcher();
+        $spec = [
+            'uri' => '/path/{param}',
+            'params' => []
+        ];
+
+        $parameterValues = [
+            'param' => 1
+        ];
+        $expectedURIMatchResult = new URIMatchResult(false);
+        $URIMatchResult = $URIMatcher->matchAgainstSpec('/path/1', $spec);
         $this->assertEquals($expectedURIMatchResult, $URIMatchResult);
     }
 }
